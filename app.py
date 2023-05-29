@@ -1,4 +1,5 @@
 import requests
+import boto3
 
 
 SERVER_URL = "https://api.zoom.us/v2"
@@ -40,3 +41,17 @@ def get_access_token():
     """
     Returns the access token of the user
     """
+
+
+all_recordings = "all recordings available"
+
+# Creating the s3 client
+s3_client = boto3.client('s3')
+
+
+bucket = ''
+
+
+for recording in all_recordings:
+    # Using the put_object method 
+    s3_client.put_object(Body=..., Bucket=bucket, Key='')
