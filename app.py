@@ -1,6 +1,7 @@
 import requests
 import json
 import boto3
+import os
 import base64
 
 # https://zoom.us/oauth/authorize?response_type=code&client_id=X_U_1WfcTLST6tEiVs3Pkw&redirect_uri=http://localhost:3000/redirect
@@ -15,17 +16,10 @@ auth_query_parameters = {
     "client_id" : "X_U_1WfcTLST6tEiVs3Pkw"
 }
 
-
 ACCESS_TOKEN_URL = "https://zoom.us/oauth/token"
-ACCESS_URL_PARAMETERS = {
-    "code":"Kwj3Qxa6Lul4sxXVIYMR1Od0OZ5vswVEA",
-    "grant_type" : "- authorization_code",
-    "redirect_uri" : "http://localhost:3000/redirect"
-}
 
-
-CLIENT_ID = "X_U_1WfcTLST6tEiVs3Pkw"
-SECRET_ID = "Uv6f7S8xY2jyVRLgYXG6KQQtsHKkFyYW"
+CLIENT_ID = os.environ.get("CLIENT_ID")
+SECRET_ID = os.environ.get("SECRET_ID")
 
 authorization_header_value = base64.b64encode(f"{CLIENT_ID}:{SECRET_ID}".encode()).decode()
 
@@ -58,6 +52,11 @@ def get_auth_code():
     login_url = requests.get(url = AUTH_URL, params = auth_query_parameters)
     print(login_url.url)
 
+ACCESS_URL_PARAMETERS = {
+    "code" : get_auth_code(),
+    "grant_type" : "- authorization_code",
+    "redirect_uri" : "http://localhost:3000/redirect"
+}
 
 
 def get_access_token():
