@@ -1,6 +1,5 @@
 import requests
 import json
-import boto3
 import os
 import base64
 
@@ -52,6 +51,7 @@ def get_auth_code():
     login_url = requests.get(url = AUTH_URL, params = auth_query_parameters)
     print(login_url.url)
 
+
 ACCESS_URL_PARAMETERS = {
     "code" : get_auth_code(),
     "grant_type" : "- authorization_code",
@@ -73,8 +73,6 @@ def get_access_token():
         print("Failed to obtain access token.")
 
 
-# return links to videos
-all_recordings = ["all recordings available"]
 def login(login_url, email, password):
     """
     Signs in to user account
@@ -85,26 +83,6 @@ def login(login_url, email, password):
     }
     code = requests.request(method="post", url = login_url, json=login_url)
     print(code.url)
-
-get_access_token()
-# get_auth_code()
-
-
-    
-
-access_key = ''
-secret_key = ''
-bucket = ''
-
-# Creating the s3 client
-s3_client = boto3.client('s3', aws_access_key=access_key, aws_secret_access_key=secret_key)
-
-
-for recording in all_recordings:
-    # Using the put_object method 
-    s3_client.put_object(Body=..., Bucket=bucket, Key='')
-    print("Recording has been successfully uploaded to s3")
-
 
 
 
