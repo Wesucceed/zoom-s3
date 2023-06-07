@@ -56,10 +56,8 @@ def get_access_token():
     Returns the access token of the user
     """
 
-<<<<<<< HEAD
 # return links to videos
 all_recordings = ["all recordings available"]
-=======
 def login(login_url, email, password):
     """
     Signs in to user account
@@ -76,7 +74,6 @@ get_auth_code()
 
 
     
->>>>>>> e29ad44806b7972ed7e6cee7f2d68a0d58eb501b
 
 access_key = ''
 secret_key = ''
@@ -89,7 +86,4 @@ s3_client = boto3.client('s3', aws_access_key=access_key, aws_secret_access_key=
 for recording in all_recordings:
     # Using the put_object method 
     s3_client.put_object(Body=..., Bucket=bucket, Key='')
-<<<<<<< HEAD
     print("Recording has been successfully uploaded to s3")
-=======
->>>>>>> e29ad44806b7972ed7e6cee7f2d68a0d58eb501b
