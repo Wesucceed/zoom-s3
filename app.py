@@ -30,6 +30,13 @@ def get_all_recordings(userId):
     
     Parameter userId: is an integer representing the user id
     """
+    userId = ''
+    recordings_url = 'https://api.zoom.us/v2/users/' + userId + '/recordings'
+    response = requests.get(recordings_url)
+
+    # Using the meetings property, we access the value which returns a list of recordings
+    recording_info = response.json()['meetings'] 
+    return recording_info
 
 
 def get_auth_code():
@@ -42,16 +49,18 @@ def get_access_token():
     Returns the access token of the user
     """
 
+# return links to videos
+all_recordings = ["all recordings available"]
 
-all_recordings = "all recordings available"
+access_key = ''
+secret_key = ''
+bucket = ''
 
 # Creating the s3 client
-s3_client = boto3.client('s3')
-
-
-bucket = ''
+s3_client = boto3.client('s3', aws_access_key=access_key, aws_secret_access_key=secret_key)
 
 
 for recording in all_recordings:
     # Using the put_object method 
     s3_client.put_object(Body=..., Bucket=bucket, Key='')
+    print("Recording has been successfully uploaded to s3")
