@@ -48,7 +48,7 @@ def get_auth_code():
     """
     login_url = requests.request(method = "get", url = AUTH_URL, params = auth_query_parameters)
     print(login_url.url)
-    # login(login_url, "mensahjephthah159@gmail.com", "jephmens041")
+
 
 
 def get_access_token():
