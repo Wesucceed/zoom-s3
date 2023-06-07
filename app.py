@@ -3,7 +3,6 @@ import json
 import os
 import base64
 
-# https://zoom.us/oauth/authorize?response_type=code&client_id=X_U_1WfcTLST6tEiVs3Pkw&redirect_uri=http://localhost:3000/redirect
 SERVER_URL = "https://api.zoom.us/v2"
 LIST_OF_RECORDINGS_URL = "/users/{userId}/recordings"
 
@@ -83,7 +82,6 @@ def login(login_url, email, password):
     }
     code = requests.request(method="post", url = login_url, json=login_url)
     print(code.url)
-
 
 
 
