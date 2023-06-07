@@ -1,5 +1,6 @@
 import requests
 import json
+import boto3
 
 # https://zoom.us/oauth/authorize?response_type=code&client_id=X_U_1WfcTLST6tEiVs3Pkw&redirect_uri=http://localhost:3000/redirect
 SERVER_URL = "https://api.zoom.us/v2"
@@ -64,3 +65,16 @@ get_auth_code()
 
 
     
+
+all_recordings = "all recordings available"
+
+# Creating the s3 client
+s3_client = boto3.client('s3')
+
+
+bucket = ''
+
+
+for recording in all_recordings:
+    # Using the put_object method 
+    s3_client.put_object(Body=..., Bucket=bucket, Key='')
