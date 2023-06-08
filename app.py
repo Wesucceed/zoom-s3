@@ -3,7 +3,6 @@ import os
 import base64
 
 SERVER_URL = "https://api.zoom.us/v2"
-LIST_OF_RECORDINGS_URL = "/users/{userId}/recordings"
 
 ACCESS_TOKEN_URL = "https://zoom.us/oauth/token"
 
@@ -27,7 +26,7 @@ def get_access_token():
     """
     Returns the access token of the user
     """
-    access_token_response = requests.post(ACCESS_TOKEN_URL, params=ACCESS_URL_PARAMETERS, headers=ACCESS_HEADER)
+    access_token_response = requests.post(ACCESS_TOKEN_URL, params = ACCESS_URL_PARAMETERS, headers = ACCESS_HEADER)
 
     if access_token_response.status_code == 200:
         access_token = access_token_response.json()["access_token"]
@@ -43,13 +42,12 @@ def get_all_recordings(userId):
     
     Parameter userId: is an integer representing the user id
     """
-    userId = ''
-    recordings_url = 'https://api.zoom.us/v2/users/' + userId + '/recordings'
+    recordings_url = SERVER_URL + "/users/{userId}/recordings"
     response = requests.get(recordings_url)
-
-    # Using the meetings property, we access the value which returns a list of recordings
-    recording_info = response.json()['meetings'] 
-    return recording_info
+    if response.status_code == 200:
+        return response.json()['meetings'] 
+    else:
+        print("Failed to get recordings")
 
 
 
