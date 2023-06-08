@@ -42,14 +42,14 @@ def get_all_recordings(userId):
     
     Parameter userId: is an integer representing the user id
     """
-    recordings_url = SERVER_URL + "/users/{userId}/recordings"
+    recordings_url = SERVER_URL + f"/users/{userId}/recordings"
     response = requests.get(recordings_url)
     if response.status_code == 200:
         return response.json()['meetings'] 
     else:
         print("Failed to get recordings")
 
-
+get_access_token()
 
 # curl -X POST https://zoom.us/oauth/token -d 'grant_type=account_credentials' -d 'account_id={accountID}' -H 'Host: zoom.us' -H 'Authorization: Basic Base64Encoded(clientId:clientSecret)'
 # curl -X POST https://zoom.us/oauth/token -d 'grant_type=account_credentials' -d 'account_id=5yiPLwmTTpQVBnMxOlf32q' -H 'Host: zoom.us' -H 'Authorization: Basic aGwbwxOgK6eGHEO0W1DOCv5WCODeVxoet7DFEON7bR23gP5qEW7cmeWCbCEO3ApBEWlRwCVpDWB=='
