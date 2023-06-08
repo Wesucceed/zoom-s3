@@ -1,18 +1,9 @@
 import requests
-import json
 import os
 import base64
 
 SERVER_URL = "https://api.zoom.us/v2"
 LIST_OF_RECORDINGS_URL = "/users/{userId}/recordings"
-
-
-AUTH_URL = "https://zoom.us/oauth/authorize"
-auth_query_parameters = {
-    "response_type" : "code",
-    "redirect_uri" : "http://localhost:3000/redirect",
-    "client_id" : "X_U_1WfcTLST6tEiVs3Pkw"
-}
 
 ACCESS_TOKEN_URL = "https://zoom.us/oauth/token"
 
@@ -23,38 +14,12 @@ authorization_header_value = base64.b64encode(f"{CLIENT_ID}:{SECRET_ID}".encode(
 
 ACCESS_HEADER = {
     "Host" : "zoom.us",
-    "Authorization": f"Basic {authorization_header_value}",
-    "Content-Type": "application/x-www-form-urlencoded"
+    "Authorization": f"Basic {authorization_header_value}"
 }
 
-
-def get_all_recordings(userId):
-    """
-    Gets all recordings from the user account
-    
-    Parameter userId: is an integer representing the user id
-    """
-    userId = ''
-    recordings_url = 'https://api.zoom.us/v2/users/' + userId + '/recordings'
-    response = requests.get(recordings_url)
-
-    # Using the meetings property, we access the value which returns a list of recordings
-    recording_info = response.json()['meetings'] 
-    return recording_info
-
-
-def get_auth_code():
-    """
-    Returns the authorization code of the user
-    """
-    login_url = requests.get(url = AUTH_URL, params = auth_query_parameters)
-    print(login_url.url)
-
-
 ACCESS_URL_PARAMETERS = {
-    "code" : get_auth_code(),
-    "grant_type" : "- authorization_code",
-    "redirect_uri" : "http://localhost:3000/redirect"
+    "grant_type" : "account_credentials",
+    "account_id" : os.environ.get("ACCOUNT_ID"),
 }
 
 
@@ -72,16 +37,21 @@ def get_access_token():
         print("Failed to obtain access token.")
 
 
-def login(login_url, email, password):
+def get_all_recordings(userId):
     """
-    Signs in to user account
+    Gets all recordings from the user account
+    
+    Parameter userId: is an integer representing the user id
     """
-    payload = {
-        "email" : email,
-        "password" : password
-    }
-    code = requests.request(method="post", url = login_url, json=login_url)
-    print(code.url)
+    userId = ''
+    recordings_url = 'https://api.zoom.us/v2/users/' + userId + '/recordings'
+    response = requests.get(recordings_url)
+
+    # Using the meetings property, we access the value which returns a list of recordings
+    recording_info = response.json()['meetings'] 
+    return recording_info
 
 
 
+# curl -X POST https://zoom.us/oauth/token -d 'grant_type=account_credentials' -d 'account_id={accountID}' -H 'Host: zoom.us' -H 'Authorization: Basic Base64Encoded(clientId:clientSecret)'
+# curl -X POST https://zoom.us/oauth/token -d 'grant_type=account_credentials' -d 'account_id=5yiPLwmTTpQVBnMxOlf32q' -H 'Host: zoom.us' -H 'Authorization: Basic aGwbwxOgK6eGHEO0W1DOCv5WCODeVxoet7DFEON7bR23gP5qEW7cmeWCbCEO3ApBEWlRwCVpDWB=='
