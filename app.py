@@ -1,8 +1,11 @@
 import requests
 import os
 from base64 import b64encode
-
+from datetime import date
+from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
+import json
+# from s3_upload import upload_file_from_stream
 load_dotenv()
 
 SERVER_URL = "https://api.zoom.us/v2"
@@ -13,12 +16,12 @@ ACCESS_TOKEN_URL = "https://zoom.us/oauth/token"
 CLIENT_ID = os.environ.get("CLIENT_ID")
 SECRET_ID = os.environ.get("SECRET_ID")
 
-auth_value = b64encode(f"{CLIENT_ID}:{SECRET_ID}".encode("utf-8"))
-auth_value = auth_value.decode(encoding="utf-8")
+access_token_auth_val = b64encode(f"{CLIENT_ID}:{SECRET_ID}".encode("utf-8"))
+access_token_auth_val = f"Basic {access_token_auth_val.decode(encoding='utf-8')}"
 
 ACCESS_HEADER = {
     "Content-Type" : "application/x-www-form-urlencoded",
-    "Authorization": f"Basic {auth_value}"
+    "Authorization": access_token_auth_val
 }
 
 ACCESS_URL_PARAMETERS = {
@@ -42,16 +45,128 @@ def get_access_token():
     print("Failed to obtain access token.")
 
 
-def get_all_recordings(userId):
+def get_all_recordings(user_email, start_date, end_date):
     """
-    Gets all recordings from the user account
+    Gets all recordings from the user account by email
     
-    Parameter userId: is an integer representing the user id
+    Pre user_email: is a string of the user's email
+
+    Pre start_date: is a list of length 3 representing the start date
+                    Date has yy/mm/dd format
     """
-    recordings_url = SERVER_URL + f"/users/{userId}/recordings"
-    response = requests.get(recordings_url)
+    assert isinstance(user_email, str)
+    assert isinstance(start_date, list)
+    assert len(start_date) == 3
+    for _ in start_date:
+        assert isinstance(_, int)
+
+    for _ in end_date:
+        assert isinstance(_, int)
+
+    start_date = date(start_date[0], start_date[1], start_date[2])
+    end_date = date(end_date[0], end_date[1], end_date[2])
+    
+    recordings_url = SERVER_URL + f"/users/{user_email}/recordings"
+    rec_auth_val = f"Bearer {get_access_token()}"
+    response = requests.get(url = recordings_url, 
+                            headers =  {"Authorization" : rec_auth_val}, params={
+                                "from" : start_date,
+                                "to" : end_date
+                            })
+
     if response.status_code == 200:
-        return response.json()['meetings'] 
+        all_recordings = []
+        recording_files_ids = set()
+        try:
+            meetings = response.json().get("meetings", [])
+            _add_recordings(meetings, recording_files_ids, all_recordings)
+        except Exception as e:
+            print(e)
+        return all_recordings
     else:
         print("Failed to get recordings")
+
+
+def _add_recordings(meetings, recording_files_ids, all_recordings):
+     """
+     Adds meeting's recordings to all_recordings
+     """
+
+     for meeting in meetings:
+        folder_name = "my-recordings"
+        recording_files = meeting.get("recording_files", [])
+        for recording_file in recording_files:
+            if recording_file.get("id") not in recording_files_ids:
+                recording_files_ids.add(recording_file.get("id"))
+                download_url = recording_file.get("download_url")
+                object_key = f'{meeting.get("topic")}/{meeting.get("start_time")}/{recording_file.get("recording_type")}.{recording_file.get("file_type", "").lower()}'
+                all_recordings.append({
+                                "download_url" : download_url,
+                                "bucket_key" : folder_name,
+                                "object_key" : object_key,
+                                "meeting_id" : meeting.get("id")
+                            })
+
+
+def write_recording_to_file(data, filename):
+    """
+    Writes recording data to file
+
+    Pre data: is a list of recording data to be written to file
+    
+    Pre filename: is a string of the name of the file to be written
+    """
+    assert isinstance(data, list)
+    assert isinstance(filename, str)
+
+    with open(filename, "w") as file:
+        json.dump(data, file)
+        return True
+    
+
+def upload_recording(data):
+    """
+    Uploads recoding to s3 bucket
+    
+    Pre data: is the recording data 
+    """
+    recording_url = f"{data.get('download_url')}?access_key={get_access_token()}"
+    bucket_key = data.get("bucket_key")
+    object_key = data.get("object_key")
+    
+    try:
+        with requests.get(recording_url, stream = True, allow_redirects = True) as stream:
+            if stream.status_code != requests.codes.ok:
+                print("Not okay", stream.status_code)
+                return
+            if stream.headers["Content-Type"] == "text/html;charset=utf-8":
+                file =  open(f"tmp.html", 'w+')
+                print("\n\nCouldn't get the recording.  Check the tmp.html file :(")
+                file.write(stream.text)
+                file.close()
+                return
+            
+            # upload_file_from_stream(
+            #     stream = stream.raw,
+            #     bucket_key = bucket_key,
+            #     object_key = object_key,
+            #     content_type = stream.headers["Content-Type"]
+            # )
+
+    except Exception as e:
+        print(
+            f"\n\nfailed with error: {e}"
+        )
+        return 
+    return True
+
+
+if __name__ == "__main__":
+    user_email = os.environ.get("USER_EMAIL")
+    start_date = os.environ.get("START_DATE").split("-")
+    end_date = os.environ.get("END_DATE").split("-")
+    start_date = [int(start_date[0]), int(start_date[1]), int(start_date[2])]
+    end_date = [int(end_date[0]), int(end_date[1]), int(end_date[2])]
+    write_recording_to_file(get_all_recordings(user_email, start_date, end_date),
+                            os.environ.get("FILENAME"))
 
