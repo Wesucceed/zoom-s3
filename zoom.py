@@ -2,11 +2,11 @@ import requests
 import os
 from base64 import b64encode
 from datetime import date
-from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
 import json
-# from s3_upload import upload_file_from_stream
+from s3_upload import upload_file_from_stream
 load_dotenv()
+import time
 
 SERVER_URL = "https://api.zoom.us/v2"
 
@@ -146,12 +146,12 @@ def upload_recording(data):
                 file.close()
                 return
             
-            # upload_file_from_stream(
-            #     stream = stream.raw,
-            #     bucket_key = bucket_key,
-            #     object_key = object_key,
-            #     content_type = stream.headers["Content-Type"]
-            # )
+            upload_file_from_stream(
+                stream = stream.raw,
+                bucket_key = bucket_key,
+                object_key = object_key,
+                content_type = stream.headers["Content-Type"]
+            )
 
     except Exception as e:
         print(
@@ -161,12 +161,12 @@ def upload_recording(data):
     return True
 
 
-if __name__ == "__main__":
-    user_email = os.environ.get("USER_EMAIL")
-    start_date = os.environ.get("START_DATE").split("-")
-    end_date = os.environ.get("END_DATE").split("-")
-    start_date = [int(start_date[0]), int(start_date[1]), int(start_date[2])]
-    end_date = [int(end_date[0]), int(end_date[1]), int(end_date[2])]
-    write_recording_to_file(get_all_recordings(user_email, start_date, end_date),
-                            os.environ.get("FILENAME"))
+def fetch_recordings_and_upload_to_s3():
+    with open(os.environ.get("FILENAME"), 'r') as file:
+        recordings = json.load(file)
+        for recording in reversed(recordings):
+            upload_recording(recording)
+            time.sleep(61) 
+
+
 
