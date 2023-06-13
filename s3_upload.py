@@ -10,6 +10,7 @@ SECRET_KEY = os.environ.get('S3_BUCKET_SECRET_KEY')
 
 
 def get_s3_client():
+
     return boto3.client(
         's3',
         aws_access_key_id=ACCESS_KEY,
@@ -24,7 +25,9 @@ def upload_file_from_stream(
   content_type: str
 ) -> None:
     s3_client = get_s3_client()
+
     print(bucket_key, content_type)
+    
     s3_client.upload_fileobj(
     stream,
     bucket_key,

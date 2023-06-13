@@ -93,7 +93,7 @@ def _add_recordings(meetings, recording_files_ids, all_recordings):
      """
 
      for meeting in meetings:
-        folder_name = "my-recordings"
+        folder_name = "kehillah-zoom-to-s3"
         recording_files = meeting.get("recording_files", [])
         for recording_file in recording_files:
             if recording_file.get("id") not in recording_files_ids:
@@ -136,6 +136,7 @@ def upload_recording(data):
     
     try:
         with requests.get(recording_url, stream = True, allow_redirects = True) as stream:
+            
             if stream.status_code != requests.codes.ok:
                 print("Not okay", stream.status_code)
                 return
@@ -145,6 +146,7 @@ def upload_recording(data):
                 file.write(stream.text)
                 file.close()
                 return
+            
             
             upload_file_from_stream(
                 stream = stream.raw,
@@ -162,9 +164,15 @@ def upload_recording(data):
 
 
 def fetch_recordings_and_upload_to_s3():
+    """
+    Loads recordings from a json file and uploads it to s3
+
+    Calls upload_recording() to upload recordings
+    """
     with open(os.environ.get("FILENAME"), 'r') as file:
         recordings = json.load(file)
         for recording in reversed(recordings):
+            
             upload_recording(recording)
             time.sleep(61) 
 
