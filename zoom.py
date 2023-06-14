@@ -192,7 +192,7 @@ def connect_webhook():
     }
 
     data = {
-        "url": "YOUR_WEBHOOK_ENDPOINT_URL",
+        "url": os.environ.get("WEBHOOK_URL"),
         "event_types": ["recording.completed"]
     }
 
