@@ -7,6 +7,7 @@ import json
 from s3_upload import upload_file_from_stream
 load_dotenv()
 import time
+from dateutil.relativedelta import relativedelta
 
 SERVER_URL = "https://api.zoom.us/v2"
 
@@ -45,7 +46,7 @@ def get_access_token():
     print("Failed to obtain access token.")
 
 
-def get_all_recordings(user_email, start_date, end_date):
+def get_all_recordings(user_email, start_date, ):
     """
     Gets all recordings from the user account by email
     
@@ -60,32 +61,35 @@ def get_all_recordings(user_email, start_date, end_date):
     for _ in start_date:
         assert isinstance(_, int)
 
-    for _ in end_date:
-        assert isinstance(_, int)
-
     start_date = date(start_date[0], start_date[1], start_date[2])
-    end_date = date(end_date[0], end_date[1], end_date[2])
     
+    all_recordings = []
+    recording_files_ids = set()
     recordings_url = SERVER_URL + f"/users/{user_email}/recordings"
-    rec_auth_val = f"Bearer {get_access_token()}"
-    response = requests.get(url = recordings_url, 
-                            headers =  {"Authorization" : rec_auth_val}, params={
-                                "from" : start_date,
-                                "to" : end_date
-                            })
-
-    if response.status_code == 200:
-        all_recordings = []
-        recording_files_ids = set()
+ 
+    while start_date < date.today():
+       
+        end_date = start_date + relativedelta(months=+3)
+        rec_auth_val = f"Bearer {get_access_token()}"
+        response = requests.get(url = recordings_url, 
+                                headers =  {"Authorization" : rec_auth_val},
+                                params={
+                                    "from" : start_date,
+                                    "to" : end_date
+                                })
+            
         try:
             meetings = response.json().get("meetings", [])
             _add_recordings(meetings, recording_files_ids, all_recordings)
         except Exception as e:
             print(e)
-        return all_recordings
-    else:
-        print("Failed to get recordings")
 
+        start_date = end_date
+      
+   
+    return all_recordings
+        
+  
 
 def _add_recordings(meetings, recording_files_ids, all_recordings):
      """
@@ -96,16 +100,17 @@ def _add_recordings(meetings, recording_files_ids, all_recordings):
         folder_name = "kehillah-zoom-to-s3"
         recording_files = meeting.get("recording_files", [])
         for recording_file in recording_files:
-            if recording_file.get("id") not in recording_files_ids:
-                recording_files_ids.add(recording_file.get("id"))
-                download_url = recording_file.get("download_url")
-                object_key = f'{meeting.get("topic")}/{meeting.get("start_time")}/{recording_file.get("recording_type")}.{recording_file.get("file_type", "").lower()}'
-                all_recordings.append({
-                                "download_url" : download_url,
-                                "bucket_key" : folder_name,
-                                "object_key" : object_key,
-                                "meeting_id" : meeting.get("id")
-                            })
+            if recording_file.get("id") in recording_files_ids:
+                continue
+            recording_files_ids.add(recording_file.get("id"))
+            download_url = recording_file.get("download_url")
+            object_key = f'{meeting.get("topic")}/{meeting.get("start_time")}/{recording_file.get("recording_type")}.{recording_file.get("file_type", "").lower()}'
+            all_recordings.append({
+                            "download_url" : download_url,
+                            "bucket_key" : folder_name,
+                            "object_key" : object_key,
+                            "meeting_id" : meeting.get("id")
+                        })
 
 
 def write_recording_to_file(data, filename):
@@ -177,4 +182,26 @@ def fetch_recordings_and_upload_to_s3():
             time.sleep(61) 
 
 
+def connect_webhook():
+    """
+    Connects to zoom's webhook
+    """
+    headers = {
+        "Authorization": f"Bearer {get_access_token()}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "url": "YOUR_WEBHOOK_ENDPOINT_URL",
+        "event_types": ["recording.completed"]
+    }
+
+    response = requests.post(os.environ.get("WEBHOOK_URL"), headers=headers, json=data)
+  
+    if response.status_code == 200:
+        print("Webhook created successfully.")
+    else:
+        print("Failed to create webhook. Status code:", response.status_code)
+
+        
 

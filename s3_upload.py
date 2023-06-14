@@ -34,5 +34,5 @@ def upload_file_from_stream(
     object_key,
     ExtraArgs={"ContentType": content_type}
   )
-    print("done")
+    print("In progress...")
     return True
