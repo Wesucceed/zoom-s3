@@ -1,20 +1,16 @@
-import boto3
 import os
-from dotenv import load_dotenv
-load_dotenv()
-
-
-
-ACCESS_KEY = os.environ.get('S3_BUCKET_ACCESS_KEY')
-SECRET_KEY = os.environ.get('S3_BUCKET_SECRET_KEY')
+import boto3  
+from config import config
+# from dotenv import load_dotenv
+# load_dotenv()
 
 
 def get_s3_client():
 
     return boto3.client(
         's3',
-        aws_access_key_id=ACCESS_KEY,
-        aws_secret_access_key=SECRET_KEY
+        aws_access_key_id=config.s3_bucket_access_key,
+        aws_secret_access_key=config.s3_bucket_secret_key
     )
 
 
@@ -34,5 +30,5 @@ def upload_file_from_stream(
     object_key,
     ExtraArgs={"ContentType": content_type}
   )
-    print("done")
+    print("In progress...")
     return True
