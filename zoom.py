@@ -78,7 +78,7 @@ def get_all_recordings(user_email, start_date):
             
         try:
             meetings = response.json().get("meetings", [])
-            _add_recordings(meetings, recording_files_ids, all_recordings)
+            add_recordings(meetings, recording_files_ids, all_recordings)
         except Exception as e:
             print(e)
 
@@ -89,7 +89,7 @@ def get_all_recordings(user_email, start_date):
         
   
 
-def _add_recordings(meetings, recording_files_ids, all_recordings):
+def add_recordings(meetings, recording_files_ids, all_recordings):
      """
      Adds meeting's recordings to all_recordings
      """
