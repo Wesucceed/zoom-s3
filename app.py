@@ -19,12 +19,15 @@ def test():
 @app.route("/webhook", methods=["POST"])
 def webhook():
     response = None
-    message = f"v0:{request.headers.get('x-zm-request-timestamp')}:{request.json}"
+    data = request.json
+    
+    # request.headers.get('x-zm-request-timestamp')
+    message = f"v0:{data.get('event_ts')}:{data}"
     hash_for_verify = hmac.new(config.zoom_webhook_secret_token.encode("utf-8"),
                                message.encode("utf-8"), hashlib.sha256).hexdigest()
     signature = f"v0={hash_for_verify}"
     
-    data = request.json
+    
    
 
     if request.headers.get("x-zm-signature") == signature:
@@ -42,18 +45,26 @@ def webhook():
                 "status": 200
             }
             return jsonify(response["message"]), response["status"]
+
         else:
-            response = {"message": "Authorized request to Zoom Webhook sample.", "status": 200}
+            response = {"message": "Unauthorized request to Zoom Webhook sample.", "status": 200}
             print(response["message"])
-            return jsonify(response), response["status"]
+            # return jsonify(response), response["status"]
+        
+        if data["event"] == "phone.recording_completed":
+            pass
+        else:
+            pass
+
+        if data["event"] == "recording.completed":
+            pass
+        else:
+            pass
     else:
-        response = {'message': 'Unauthorized request to Zoom Webhook sample.', 'status': 401}
+        response = {'message': 'Webhook request did not come from Zoom', 'status': 401}
         print(response['message'])
         return jsonify(response), response['status']
 
-
-    # phone.recording_completed
-    # recording.completed
 
     
     
