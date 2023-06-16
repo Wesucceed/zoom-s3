@@ -26,17 +26,6 @@ def webhook():
                                message.encode("utf-8"), hashlib.sha256).hexdigest()
     signature = f"v0={hash_for_verify}"
    
-
-    if request.headers.get("x-zm-signature") == signature:
-
-        if data["event"] == "recording.completed":
-            zoom.write_recording_to_file(zoom.add_recordings([data["payload"]["object"]],{}, []), config.file_name)
-            zoom.fetch_recordings_and_upload_to_s3()
-        
-    else:
-        response = {'message': 'Webhook request did not come from Zoom', 'status': 401}
-        print(response['message'])
-        return jsonify(response), response['status']
     
     if data["event"] == "endpoint.url_validation":
             plain_token = data["payload"]["plainToken"]
@@ -51,6 +40,17 @@ def webhook():
                 "status": 200
             }
             return jsonify(response["message"]), response["status"]
+    
+    if request.headers.get("x-zm-signature") == signature:
+
+        if data["event"] == "recording.completed":
+            zoom.write_recording_to_file(zoom.add_recordings([data["payload"]["object"]],{}, []), config.file_name)
+            zoom.fetch_recordings_and_upload_to_s3()
+        
+    else:
+        response = {'message': 'Webhook request did not come from Zoom', 'status': 401}
+        print(response['message'])
+        return jsonify(response), response['status']
     
 
 if __name__ == "__main__":
